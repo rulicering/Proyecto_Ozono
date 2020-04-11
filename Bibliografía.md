@@ -1,7 +1,7 @@
 # Bibliografía
-### GitHub
-**Guía rápida Linux**
-"https://blog.desdelinux.net/guia-rapida-para-utilizar-github/"
+### Librerias
+**Pandas()**
+https://pandas.pydata.org/docs/index.html
 
 ### Datos
 **Datos contaminación Madrid**
@@ -15,3 +15,4 @@ https://www.educa2.madrid.org/web/calendario-escolar-de-la-comunidad-de-madrid/2
 
 ### Mapas
 http://www.geomapik.com/desarrollo-programacion-gis/mapas-con-python-geopandas-matplotlib/
+
