@@ -13,6 +13,9 @@ https://datos.madrid.es/portal/site/egob/menuitem.c05c1f754a33a9fbe4b2e4b284f1a5
 **Calendario Escolar**
 https://www.educa2.madrid.org/web/calendario-escolar-de-la-comunidad-de-madrid/2019-20
 
+**Clima**
+https://opendata.aemet.es/centrodedescargas/inicio
+
 ### Mapas
 http://www.geomapik.com/desarrollo-programacion-gis/mapas-con-python-geopandas-matplotlib/
 
