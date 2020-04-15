@@ -24,4 +24,6 @@ https://datos.madrid.es/sites/v/index.jsp?vgnextoid=2ac5be53b4d2b610VgnVCM200000
 
 ### Mapas
 http://www.geomapik.com/desarrollo-programacion-gis/mapas-con-python-geopandas-matplotlib/
-
+https://team.carto.com/u/jsanz/tables/distritos/public
+https://matplotlib.org/tutorials/colors/colormaps.html
+https://pybonacci.org/2014/10/07/basemap-y-google-geocode-para-representar-puntos-sobre-un-mapa/
