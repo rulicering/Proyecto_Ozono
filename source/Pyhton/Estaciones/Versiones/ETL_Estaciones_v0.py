@@ -143,5 +143,5 @@ pd_final = pd_final.fillna(0)
 # In[172]:
 
 
-pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones.csv")
+pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Versiones/[v0]-Estaciones.csv")
 

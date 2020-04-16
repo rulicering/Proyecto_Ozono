@@ -68,5 +68,5 @@ df_v8 = df_v7_31.union(df_v7_30).union(df_v7_feb)
 
 df_final = df_v8.orderBy("ANO","MES","DIA","ESTACION")
 
-df_final.toPandas().to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/[v0]_Contaminacion_2013-2020.csv")
+df_final.toPandas().to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Versiones/[v0]_Contaminacion_2013-2020.csv")
 
