@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # [o3] - Proyecto Ozono - ETL_Clima_Prediccion  - v0
+# # [o3] - Proyecto Ozono - ETL_Clima_Prediccion  - v1
 
 # # [INFO]
 #     
@@ -25,15 +25,16 @@
 #             1.0.3 _______ PREDICCIONES _______
 #                 1.0.3.0 Obtenemos los datos
 # 				1.0.3.1 Columnas -> ANO,MES,DIA,FECHAS
-# 				1.0.3.2 Rename
-# 				1.0.3.3 Types
+#                 1.0.3.2 Direccion del viento a Grados
+# 				1.0.3.3 Rename
+# 				1.0.3.4 Types
 #            
 #     2. Export
 #             
 
 # # [0] - Inicialización
 
-# In[17]:
+# In[65]:
 
 
 from __future__ import print_function
@@ -52,7 +53,7 @@ import re as reg
 from pyspark.sql.types import StructField,StringType,IntegerType,StructType,FloatType
 
 
-# In[18]:
+# In[66]:
 
 
 spark = SparkSession.builder.appName('clima_prediccion').getOrCreate()
@@ -70,7 +71,7 @@ spark = SparkSession.builder.appName('clima_prediccion').getOrCreate()
 
 # ### [1.0.0] - Codegen + API
 
-# In[19]:
+# In[67]:
 
 
 configuration = swagger_client.Configuration()
@@ -80,7 +81,7 @@ api_predicciones = swagger_client.PrediccionesEspecificasApi(swagger_client.ApiC
 
 # ### [1.0.1] - [FUNCIONES] -  Formateo datos
 
-# In[20]:
+# In[68]:
 
 
 def convertir_a_diccionario(raw,inicio,tipo):
@@ -150,7 +151,7 @@ def convertir_a_diccionario(raw,inicio,tipo):
     return diccionario
 
 
-# In[65]:
+# In[69]:
 
 
 def dic_to_df(dic):
@@ -205,17 +206,17 @@ def dic_to_df(dic):
                 max_probabilidad= probabilidad
     
     diccionarios = []
-    diccionarios.append({"FECHA" : mañana,"PROBPRECIPITACION" : float(max_probabilidad) ,
-                         "TEMPERATURA" : temp ,"VIENTO" : viento, "DIRECCION" : direccion,
-                        "PRESION": -1.0})
+    diccionarios.append({"FECHA" : mañana,"VIENTO" : viento,"DIRECCION" : direccion,
+                        "TEMPERATURA" : temp , "PRESION": -1.0,
+                        "PROBPRECIPITACION" : float(max_probabilidad)})
 
     # Schema for the new DF
     data_schema = [StructField('FECHA',StringType(), True), #Tercer argumento = nullable
-                   StructField('PROBPRECIPITACION', FloatType(), True),
-                   StructField('TEMPERATURA', FloatType(), True),
                    StructField('VIENTO', FloatType(), True),
                    StructField('DIRECCION', StringType(), True),
-                    StructField('PRESION', FloatType(), True)
+                   StructField('TEMPERATURA', FloatType(), True),
+                   StructField('PRESION', FloatType(), True),
+                   StructField('PROBPRECIPITACION', FloatType(), True)
                   ]
     
     return spark.createDataFrame(diccionarios,schema = StructType(data_schema)) 
@@ -223,7 +224,7 @@ def dic_to_df(dic):
     return True
 
 
-# In[66]:
+# In[70]:
 
 
 def data_to_sparkdf(data):
@@ -271,7 +272,7 @@ def data_to_sparkdf(data):
 
 # ### [1.0.2]  [FUNCIONES] - Request datos
 
-# In[67]:
+# In[71]:
 
 
 def req_to_df(codigo):
@@ -288,7 +289,7 @@ def req_to_df(codigo):
     return df_aemet
 
 
-# In[68]:
+# In[72]:
 
 
 def datos_predicciones_aemet(codigos_zonas):
@@ -306,22 +307,28 @@ def datos_predicciones_aemet(codigos_zonas):
 
 # #### [1.0.3.0] -  Obtenemos los datos
 
-# In[69]:
+# In[73]:
 
 
 codigos_zonas = ["28079"]
 
 
-# In[70]:
+# In[74]:
 
 
 df_predicciones = datos_predicciones_aemet(codigos_zonas)
 #datos_predicciones_aemet(cod_estaciones_aemet_14,fecha_ini_str,fecha_fin_str)
 
 
-# ### [1.0.3.1] -Columnas -> ANO,MES,DIA,FECHA
+# In[75]:
 
-# In[71]:
+
+df_predicciones.show()
+
+
+# #### [1.0.3.1] -Columnas -> ANO,MES,DIA,FECHA
+
+# In[76]:
 
 
 df_predicciones = df_predicciones.withColumn("ANO",df_predicciones["FECHA"][0:4])
@@ -330,28 +337,63 @@ df_predicciones = df_predicciones.withColumn("DIA",df_predicciones["FECHA"][9:2]
 df_predicciones = df_predicciones.withColumn("FECHA",F.concat(df_predicciones["FECHA"][0:4],df_predicciones["FECHA"][6:2],df_predicciones["FECHA"][9:2]))
 
 
-# ### [1.0.3.2] - Rename
+# #### [1.0.3.2] - Direccion viento -> Grados
 
-# In[72]:
+# In[77]:
+
+
+def dir_to_grad(direccion):
+    if(direccion == 'E'): return 0
+    if(direccion == 'NE'): return 45
+    if(direccion == 'N'): return 90
+    if(direccion == 'NO'): return 135
+    if(direccion == 'O'): return 180
+    if(direccion == 'SO'): return 225
+    if(direccion == 'S'): return 270
+    if(direccion == 'SE'): return 315
+    if(direccion == 'C'): return None    
+
+
+# In[78]:
+
+
+my_udf = F.udf(lambda x: dir_to_grad(x),IntegerType())
+
+
+# In[79]:
+
+
+df_predicciones = df_predicciones.withColumn("DIRECCION",my_udf(df_predicciones["DIRECCION"]))
+
+
+# In[80]:
+
+
+df_predicciones.show()
+
+
+# #### [1.0.3.3] - Rename
+
+# In[81]:
 
 
 pd_predicciones = df_predicciones.toPandas()
 
 
-# In[73]:
+# In[82]:
 
 
-pd_predicciones =pd_predicciones.rename(columns={ "VELOCIDAD":"81",                         
-                                                   "DIRECCION":"S82",
-                                                   "TEMPERATURA":"83",
+pd_predicciones =pd_predicciones.rename(columns={ "VIENTO":"81",                         
+                                                   "DIRECCION":"82",
+                                                   "TEMPERATURA":"83",     
                                                    "PRESION":"87",
                                                    "PROBPRECIPITACION":"%89",
                                              })
 
 
-# ### [1.0.3.3] - Types
+# #### [1.0.3.4] - Types
 
-# In[74]:
+# In[83]:
 
 
 pd_predicciones["ANO"] =pd_predicciones["ANO"].astype(int)
@@ -360,15 +402,35 @@ pd_predicciones["DIA"] =pd_predicciones["DIA"].astype(int)
 pd_predicciones["FECHA"] =pd_predicciones["FECHA"].astype(int)
 
 
-# # [2] -Export
+# # [2] - Formato
 
-# In[75]:
+# In[84]:
+
+
+cols = pd_predicciones.columns.tolist()
+
+
+# In[85]:
+
+
+cols = cols[0:1]+ cols[-3:] + cols[1:-3]
+
+
+# In[87]:
+
+
+pd_predicciones = pd_predicciones[cols]
+
+
+# # [3] -Export
+
+# In[82]:
 
 
 pd_final = pd_predicciones
 
 
-# In[76]:
+# In[84]:
 
 
 #pd_final.head(5)
