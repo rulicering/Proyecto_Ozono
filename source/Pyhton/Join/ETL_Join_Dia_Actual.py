@@ -279,35 +279,35 @@ pd_datos_hoy_y_calendario = pd_datos_hoy.merge(pd_calendario, on = "FECHA")
 a_borrar = c_aemet_hoy
 
 
-# In[37]:
+# In[33]:
 
 
 pd_datos_hoy = pd_datos_hoy_y_calendario.drop(columns = a_borrar)
 
 
-# In[74]:
+# In[36]:
 
 
 cols = pd_datos_hoy.columns.tolist()
-cols = [cols[4]] + cols[0:4] + cols[5:]
+cols = [cols[4]] + cols[0:4] +cols[-3:]+ cols[5:-3]
 pd_datos_hoy = pd_datos_hoy[cols]
 
 
-# In[82]:
+# In[38]:
+
+
+#pd_datos_hoy.columns
+
+
+# In[39]:
 
 
 pd_datos_hoy["CODIGO_CORTO"] = pd_datos_hoy["CODIGO_CORTO"].astype(int)
 
 
-# In[75]:
-
-
-#pd_final
-
-
 # # [5] - EXPORTAR
 
-# In[87]:
+# In[43]:
 
 
 #Versiones
@@ -315,7 +315,7 @@ hoy = datetime.date.today().strftime("%Y-%m-%d")
 pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-Dia-" + hoy + ".csv")
 
 
-# In[88]:
+# In[44]:
 
 
 pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-hoy.csv")
@@ -323,14 +323,33 @@ pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/
 
 # # [6] - UNIR A DATO FINAL
 
+# In[45]:
+
+
 pd_datos = pd.read_csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv')
+
+
+# In[46]:
+
 
 pd_datos = pd_datos.drop(columns = ["Unnamed: 0"])
 
+
+# In[47]:
+
+
 pd_datos_final = pd.concat([pd_datos,pd_datos_hoy])
+
+
+# In[48]:
+
 
 #Versiones
 pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-" + hoy + ".csv")
+
+
+# In[49]:
+
 
 pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv")
 

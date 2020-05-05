@@ -36,7 +36,7 @@
 
 # # [0] - Inicialización
 
-# In[26]:
+# In[44]:
 
 
 from __future__ import print_function
@@ -56,7 +56,7 @@ import re as reg
 from pyspark.sql.types import StructField,StringType,IntegerType,StructType,FloatType
 
 
-# In[27]:
+# In[45]:
 
 
 spark = SparkSession.builder.appName('clima_hoy').getOrCreate()
@@ -66,7 +66,8 @@ spark = SparkSession.builder.appName('clima_hoy').getOrCreate()
 
 # ## [1.0] - Carga fichero Estaciones HOY
 
-# In[28]:
+# In[46]:
+
 
 df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-hoy.csv",inferSchema= True, header= True)
 #Fuerzo que se ejecute para que luego al filtrar no tenga que volver a leer el csv
@@ -75,7 +76,7 @@ df_estaciones = spark.createDataFrame(df_estaciones.toPandas())
 
 # ## [1.1] - Lista magnitudes
 
-# In[29]:
+# In[47]:
 
 
 regex = reg.compile("E_AEMET_HOY")
@@ -94,14 +95,14 @@ c_magnitudes_aemet_hoy = [elem[-2:] for elem in list(filter(regex.search,df_esta
 
 # ### [1.2.0] - Codegen + API
 
-# In[30]:
+# In[48]:
 
 
 configuration = swagger_client.Configuration()
 configuration.api_key['api_key'] = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcm95ZWN0by5vem9uby5jb250YWN0QGdtYWlsLmNvbSIsImp0aSI6ImNlZDZiZWQ2LTUyN2EtNGQ2Yi1iOGMyLWU1YmRlNzk3YzYzZSIsImlzcyI6IkFFTUVUIiwiaWF0IjoxNTg2NzE3MTE2LCJ1c2VySWQiOiJjZWQ2YmVkNi01MjdhLTRkNmItYjhjMi1lNWJkZTc5N2M2M2UiLCJyb2xlIjoiIn0.U3b4ELAg-9eJcwgpzr4QgkF-Yj6jb9gw0DOa8sqAwHo'
 
 
-# In[31]:
+# In[49]:
 
 
 #api_instance = swagger_client.AvisosCapApi(swagger_client.ApiClient(configuration))
@@ -110,7 +111,7 @@ api_observacion = swagger_client.ObservacionConvencionalApi(swagger_client.ApiCl
 
 # ### [1.2.1] - [FUNCION] -  Formateo datos
 
-# In[32]:
+# In[50]:
 
 
 def data_to_sparkdf(data):
@@ -197,7 +198,7 @@ def data_to_sparkdf(data):
 
 # ### [1.2.2]  [FUNCIONES] - Request datos
 
-# In[33]:
+# In[51]:
 
 
 def req_hoy_to_df(codigo):
@@ -219,7 +220,7 @@ def req_hoy_to_df(codigo):
     #return df_aemet.select('fecha','indicativo','dir','prec','presMax','presMin','sol','tmax','tmin','velmedia')
 
 
-# In[34]:
+# In[52]:
 
 
 def datos_aemet_hoy(codigos_estaciones):
@@ -237,19 +238,19 @@ def datos_aemet_hoy(codigos_estaciones):
 
 # #### [1.2.3.0] - Estaciones 
 
-# In[35]:
+# In[53]:
 
 
 df_estaciones_aemet_hoy = df_estaciones.filter(df_estaciones["U_AEMET_HOY"])
 
 
-# In[36]:
+# In[54]:
 
 
 cod_estaciones_aemet_hoy = [elem[0] for elem in df_estaciones_aemet_hoy.select("CODIGO_CORTO").collect()]
 
 
-# In[37]:
+# In[55]:
 
 
 cod_estaciones_aemet_hoy
@@ -257,13 +258,13 @@ cod_estaciones_aemet_hoy
 
 # #### [1.2.3.1] -  Obtenemos los datos
 
-# In[38]:
+# In[56]:
 
 
 df_aemet_hoy = datos_aemet_hoy(cod_estaciones_aemet_hoy)
 
 
-# In[39]:
+# In[57]:
 
 
 df_aemet = df_aemet_hoy
@@ -271,7 +272,7 @@ df_aemet = df_aemet_hoy
 
 # ### [1.2.4] -Columnas -> ANO,MES,DIA,FECHA
 
-# In[40]:
+# In[58]:
 
 
 df_aemet = df_aemet.withColumn("ANO",df_aemet["fint"][0:4])
@@ -283,13 +284,13 @@ df_aemet = df_aemet.withColumn("FECHA",F.concat(df_aemet["fint"][0:4],df_aemet["
 
 # ### [1.2.5] - Columna -> avg(Temp)
 
-# In[41]:
+# In[59]:
 
 
 pd_aemet = df_aemet.toPandas()
 
 
-# In[42]:
+# In[60]:
 
 
 #Cambias comas por puntos
@@ -297,7 +298,7 @@ pd_aemet["tamax"]  =  [reg.sub(',','.',str(x)) for x in pd_aemet["tamax"]]
 pd_aemet["tamin"]  =  [reg.sub(',','.',str(x)) for x in pd_aemet["tamin"]]
 
 
-# In[43]:
+# In[61]:
 
 
 def media(vals):
@@ -316,7 +317,7 @@ def media(vals):
         return media/validos
 
 
-# In[44]:
+# In[62]:
 
 
 pd_aemet["temp"] = [media([pmax,pmin])for pmax,pmin in zip(pd_aemet["tamax"].values, pd_aemet["tamin"].values)]
@@ -324,7 +325,7 @@ pd_aemet["temp"] = [media([pmax,pmin])for pmax,pmin in zip(pd_aemet["tamax"].val
 
 # ### [1.2.6]- Rename & Colocar
 
-# In[45]:
+# In[63]:
 
 
 pd_aemet =pd_aemet.rename(columns={"idema":"ESTACION",
@@ -336,15 +337,27 @@ pd_aemet =pd_aemet.rename(columns={"idema":"ESTACION",
                              })
 
 
+# In[64]:
+
+
+pd_aemet
+
+
 # ### [1.2.7] - FIltrar datos de ayer ( Se ejecuta a las 3 AM del dia siguiente)
 
-# In[46]:
+# In[69]:
 
 
-pd_aemet = pd_aemet[pd_aemet["DIA"]==str((datetime.date.today()+datetime.timedelta(days=-1)).day)]
+ayer = '%02d' % (datetime.date.today()+datetime.timedelta(days=-1)).day
 
 
-# In[48]:
+# In[72]:
+
+
+pd_aemet = pd_aemet[pd_aemet["DIA"]== ayer]
+
+
+# In[74]:
 
 
 #pd_aemet
@@ -352,7 +365,7 @@ pd_aemet = pd_aemet[pd_aemet["DIA"]==str((datetime.date.today()+datetime.timedel
 
 # ### [1.2.8] - Select
 
-# In[25]:
+# In[36]:
 
 
 columnas = ["ESTACION","ANO","MES","DIA","HORA","FECHA"]
@@ -360,7 +373,7 @@ for elem in c_magnitudes_aemet_hoy:
     columnas.append(elem) 
 
 
-# In[26]:
+# In[37]:
 
 
 pd_aemet = pd_aemet[columnas]
@@ -368,7 +381,7 @@ pd_aemet = pd_aemet[columnas]
 
 # ### [1.2.9] - Tipos
 
-# In[27]:
+# In[38]:
 
 
 for elem in c_magnitudes_aemet_hoy:
@@ -377,7 +390,7 @@ for elem in c_magnitudes_aemet_hoy:
 
 # ### [1.2.10] - ESTACION -> CODIGO_CORTO
 
-# In[28]:
+# In[39]:
 
 
 pd_aemet = pd_aemet.rename(columns={"ESTACION":"CODIGO_CORTO"})
@@ -387,7 +400,7 @@ pd_aemet = pd_aemet.rename(columns={"ESTACION":"CODIGO_CORTO"})
 
 # ####  [1.2.11.0] - AVERAGE DIA - (Presion,Temperatura,Velocidad del viento y Direccion del viento) + SUMA (Precipitaciones)
 
-# In[29]:
+# In[40]:
 
 
 pd_aemet_media = pd_aemet.groupby(by=["CODIGO_CORTO","ANO","MES","DIA","FECHA"]).agg({'81':'mean',
@@ -399,13 +412,13 @@ pd_aemet_media = pd_aemet.groupby(by=["CODIGO_CORTO","ANO","MES","DIA","FECHA"])
 
 # ### [1.2.12] - "None" a Nulo
 
-# In[30]:
+# In[41]:
 
 
 pd_aemet_media = pd_aemet_media.replace(('None',None),np.nan)
 
 
-# In[31]:
+# In[42]:
 
 
 pd_final = pd_aemet_media
@@ -413,13 +426,13 @@ pd_final = pd_aemet_media
 
 # # [2] -Export
 
-# In[32]:
+# In[43]:
 
 
-#pd_final.head(5)
+pd_final.head(5)
 
 
-# In[33]:
+# In[ ]:
 
 
 #Versiones
@@ -427,7 +440,7 @@ hoy = datetime.date.today().strftime("%Y-%m-%d")
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima-"+ hoy + ".csv")
 
 
-# In[34]:
+# In[ ]:
 
 
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-hoy.csv")
