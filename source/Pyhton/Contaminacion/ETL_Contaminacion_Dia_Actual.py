@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # [o3]- Proyecto Ozono - ETL_Contaminación_Dia_Actual_v0
+# # [o3]- Proyecto Ozono - ETL_Contaminación_Dia_Actual_v1
 
 #     0. Inicializacion
 #     1. Datos
@@ -27,7 +27,7 @@
 
 # # [0] - Inicialización
 
-# In[24]:
+# In[1]:
 
 
 from __future__ import print_function
@@ -43,7 +43,7 @@ import requests
 import io
 
 
-# In[25]:
+# In[2]:
 
 
 spark = SparkSession.builder.appName('contaminacion_hoy').getOrCreate()
@@ -53,13 +53,13 @@ spark = SparkSession.builder.appName('contaminacion_hoy').getOrCreate()
 
 # ## [1.0] - Carga ficheros AIRE ( Tiempo Real) - URL
 
-# In[26]:
+# In[3]:
 
 
 url =  "http://www.mambiente.madrid.es/opendata/horario.csv"
 
 
-# In[27]:
+# In[4]:
 
 
 hdr = {"Host": "www.mambiente.madrid.es",
@@ -72,7 +72,7 @@ hdr = {"Host": "www.mambiente.madrid.es",
     "Upgrade-Insecure-Requests": "1"}
 
 
-# In[28]:
+# In[5]:
 
 
 r = requests.get(url = url, headers = hdr)
@@ -81,13 +81,13 @@ file_object = io.StringIO(r.content.decode(r.apparent_encoding))
 pd_aire_hoy = pd.read_csv(file_object,sep=';')
 
 
-# In[29]:
+# In[6]:
 
 
 #pd_aire_hoy.head(5)
 
 
-# In[30]:
+# In[7]:
 
 
 df = spark.createDataFrame(pd_aire_hoy)
@@ -96,7 +96,7 @@ df = spark.createDataFrame(pd_aire_hoy)
 # ## [1.1] - FORMATO: 
 # ### [ESTACION,MAGNITUD,ANO,MES,DIA,DATO_HORA1,VALIDO,DATO_HORA2,VALIDO...]
 
-# In[31]:
+# In[8]:
 
 
 #Eliminamos columnas no esenciales
@@ -105,7 +105,7 @@ df = df.select('ESTACION','MAGNITUD','ANO','MES','DIA','H01','V01','H02','V02','
 
 # ## [1.2] - Creacion nuevo esquema
 
-# In[32]:
+# In[9]:
 
 
 data_schema = [StructField('ESTACION',IntegerType(), False), 
@@ -121,7 +121,7 @@ struct = StructType(fields = data_schema)
 
 # ## [1.3] - Creacion nuevo DF vacio
 
-# In[33]:
+# In[10]:
 
 
 df_v1 = spark.createDataFrame(spark.sparkContext.emptyRDD(),struct)
@@ -129,7 +129,7 @@ df_v1 = spark.createDataFrame(spark.sparkContext.emptyRDD(),struct)
 
 # ## [1.4] - Nuevo DF -> [ESTACION,MAGNITUD,ANO,MES,DIA,HORA,VALOR,VALIDO]
 
-# In[34]:
+# In[11]:
 
 
 for i in range(1,25): #Horas dia
@@ -142,7 +142,7 @@ df = df_v1
 
 # ## [1.5] - Columna FECHA -> 20140101
 
-# In[35]:
+# In[12]:
 
 
 df = df.withColumn("FECHA",df["ANO"]*10000 + df["MES"]*100 + df["DIA"])
@@ -151,7 +151,7 @@ df = df.withColumn("FECHA",df["ANO"]*10000 + df["MES"]*100 + df["DIA"])
 # ## [1.6] -Colocar columnas 
 # ### [ESTACION, MAGNITUD, ANO,MES,DIA, HORA,FECHA, VALOR,VALIDO]
 
-# In[36]:
+# In[13]:
 
 
 #Colocar las columnas
@@ -162,7 +162,7 @@ df= df[cols]
 
 # ## [1.7] - VALOR ? VALIDO -> VALOR VALIDADO
 
-# In[37]:
+# In[14]:
 
 
 df = df.withColumn("VALOR VALIDADO",F.when(F.col("VALIDO")== 'N',None).otherwise(F.col("VALOR")) )
@@ -171,7 +171,7 @@ df = df.select("ESTACION","MAGNITUD","ANO","MES","DIA","HORA","FECHA",df["VALOR 
 
 # ## [1.8] - PIVOT Magnitudes
 
-# In[38]:
+# In[15]:
 
 
 df = df.groupBy('ESTACION','ANO', 'MES', 'DIA','HORA',"FECHA").pivot("MAGNITUD").sum("VALOR").orderBy("FECHA")
@@ -179,13 +179,13 @@ df = df.groupBy('ESTACION','ANO', 'MES', 'DIA','HORA',"FECHA").pivot("MAGNITUD")
 
 # # [2] - Formato
 
-# In[39]:
+# In[16]:
 
 
 df = df.withColumn("ESTACION",df["ESTACION"].cast(StringType()))
 
 
-# In[40]:
+# In[17]:
 
 
 pd = df.toPandas()
@@ -195,7 +195,16 @@ pd_diaxhoras = pd
 
 # # [3] - Ordenar 
 
-# In[41]:
+# In[36]:
+
+
+cols_magnitudes = pd_diaxhoras.columns.tolist()[6:]
+cols_magnitudes.sort()
+cols = pd_diaxhoras.columns.tolist()[0:6] + cols_magnitudes
+pd_diaxhoras = pd_diaxhoras[cols]
+
+
+# In[38]:
 
 
 pd_diaxhoras = pd_diaxhoras.sort_values(by=["ANO","MES","DIA","FECHA","HORA","CODIGO_CORTO"])
@@ -203,26 +212,26 @@ pd_diaxhoras = pd_diaxhoras.sort_values(by=["ANO","MES","DIA","FECHA","HORA","CO
 
 # # [4] - Media diaria
 
-# In[42]:
+# In[39]:
 
 
 pd_media_dia = pd_diaxhoras.groupby(by=["ANO","MES","DIA","FECHA","CODIGO_CORTO"]).agg('mean')
 
 
-# In[43]:
+# In[41]:
 
 
 cols = pd_media_dia.columns
 cols = cols[1:] #Quitamos la columna "HORA"
 
 
-# In[44]:
+# In[42]:
 
 
 pd_media_dia = pd_media_dia[cols]
 
 
-# In[45]:
+# In[43]:
 
 
 #pd_media_dia
@@ -230,7 +239,7 @@ pd_media_dia = pd_media_dia[cols]
 
 # # [5] - Exportar
 
-# In[46]:
+# In[44]:
 
 
 hoy = datetime.date.today().strftime("%Y-%m-%d")
