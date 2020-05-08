@@ -53,7 +53,7 @@ spark = SparkSession.builder.appName('contaminacion').getOrCreate()
 df_aire = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia.csv',inferSchema= True,header=True)
 df_clima = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-hoy.csv',inferSchema= True,header=True)
 df_estaciones = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-hoy.csv',inferSchema= True,header=True)
-df_calendario = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Calendario/Calendario_2013-2020.csv',inferSchema= True,header=True)
+df_calendario = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Calendario/Calendario_2001-2020.csv',inferSchema= True,header=True)
 
 
 # ## [1.1] - Paso a Pandas
