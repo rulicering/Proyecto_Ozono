@@ -36,7 +36,7 @@
 
 # # [0] - Inicialización
 
-# In[44]:
+# In[ ]:
 
 
 from __future__ import print_function
@@ -53,10 +53,11 @@ pd.options.mode.chained_assignment = None
 import requests
 import numpy as np
 import re as reg
+import json
 from pyspark.sql.types import StructField,StringType,IntegerType,StructType,FloatType
 
 
-# In[45]:
+# In[ ]:
 
 
 spark = SparkSession.builder.appName('clima_hoy').getOrCreate()
@@ -64,9 +65,17 @@ spark = SparkSession.builder.appName('clima_hoy').getOrCreate()
 
 # # [1] -  Datos
 
+# In[ ]:
+
+
+f = open("/home/rulicering/Datos_Proyecto_Ozono/Credenciales/Credenciales.json")
+credenciales = json.load(f)
+AEMET_API_KEY = credenciales["aemet"]["api_key"]
+
+
 # ## [1.0] - Carga fichero Estaciones HOY
 
-# In[46]:
+# In[ ]:
 
 
 df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-hoy.csv",inferSchema= True, header= True)
@@ -76,7 +85,7 @@ df_estaciones = spark.createDataFrame(df_estaciones.toPandas())
 
 # ## [1.1] - Lista magnitudes
 
-# In[47]:
+# In[ ]:
 
 
 regex = reg.compile("E_AEMET_HOY")
@@ -95,14 +104,14 @@ c_magnitudes_aemet_hoy = [elem[-2:] for elem in list(filter(regex.search,df_esta
 
 # ### [1.2.0] - Codegen + API
 
-# In[48]:
+# In[ ]:
 
 
 configuration = swagger_client.Configuration()
-configuration.api_key['api_key'] = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcm95ZWN0by5vem9uby5jb250YWN0QGdtYWlsLmNvbSIsImp0aSI6ImNlZDZiZWQ2LTUyN2EtNGQ2Yi1iOGMyLWU1YmRlNzk3YzYzZSIsImlzcyI6IkFFTUVUIiwiaWF0IjoxNTg2NzE3MTE2LCJ1c2VySWQiOiJjZWQ2YmVkNi01MjdhLTRkNmItYjhjMi1lNWJkZTc5N2M2M2UiLCJyb2xlIjoiIn0.U3b4ELAg-9eJcwgpzr4QgkF-Yj6jb9gw0DOa8sqAwHo'
+configuration.api_key['api_key'] = AEMET_API_KEY
 
 
-# In[49]:
+# In[ ]:
 
 
 #api_instance = swagger_client.AvisosCapApi(swagger_client.ApiClient(configuration))
@@ -111,7 +120,7 @@ api_observacion = swagger_client.ObservacionConvencionalApi(swagger_client.ApiCl
 
 # ### [1.2.1] - [FUNCION] -  Formateo datos
 
-# In[50]:
+# In[ ]:
 
 
 def data_to_sparkdf(data):
@@ -198,7 +207,7 @@ def data_to_sparkdf(data):
 
 # ### [1.2.2]  [FUNCIONES] - Request datos
 
-# In[51]:
+# In[ ]:
 
 
 def req_hoy_to_df(codigo):
@@ -220,7 +229,7 @@ def req_hoy_to_df(codigo):
     #return df_aemet.select('fecha','indicativo','dir','prec','presMax','presMin','sol','tmax','tmin','velmedia')
 
 
-# In[52]:
+# In[ ]:
 
 
 def datos_aemet_hoy(codigos_estaciones):
@@ -238,19 +247,19 @@ def datos_aemet_hoy(codigos_estaciones):
 
 # #### [1.2.3.0] - Estaciones 
 
-# In[53]:
+# In[ ]:
 
 
 df_estaciones_aemet_hoy = df_estaciones.filter(df_estaciones["U_AEMET_HOY"])
 
 
-# In[54]:
+# In[ ]:
 
 
 cod_estaciones_aemet_hoy = [elem[0] for elem in df_estaciones_aemet_hoy.select("CODIGO_CORTO").collect()]
 
 
-# In[55]:
+# In[ ]:
 
 
 cod_estaciones_aemet_hoy
@@ -258,13 +267,13 @@ cod_estaciones_aemet_hoy
 
 # #### [1.2.3.1] -  Obtenemos los datos
 
-# In[56]:
+# In[ ]:
 
 
 df_aemet_hoy = datos_aemet_hoy(cod_estaciones_aemet_hoy)
 
 
-# In[57]:
+# In[ ]:
 
 
 df_aemet = df_aemet_hoy
@@ -272,7 +281,7 @@ df_aemet = df_aemet_hoy
 
 # ### [1.2.4] -Columnas -> ANO,MES,DIA,FECHA
 
-# In[58]:
+# In[ ]:
 
 
 df_aemet = df_aemet.withColumn("ANO",df_aemet["fint"][0:4])
@@ -284,13 +293,13 @@ df_aemet = df_aemet.withColumn("FECHA",F.concat(df_aemet["fint"][0:4],df_aemet["
 
 # ### [1.2.5] - Columna -> avg(Temp)
 
-# In[59]:
+# In[ ]:
 
 
 pd_aemet = df_aemet.toPandas()
 
 
-# In[60]:
+# In[ ]:
 
 
 #Cambias comas por puntos
@@ -298,7 +307,7 @@ pd_aemet["tamax"]  =  [reg.sub(',','.',str(x)) for x in pd_aemet["tamax"]]
 pd_aemet["tamin"]  =  [reg.sub(',','.',str(x)) for x in pd_aemet["tamin"]]
 
 
-# In[61]:
+# In[ ]:
 
 
 def media(vals):
@@ -317,7 +326,7 @@ def media(vals):
         return media/validos
 
 
-# In[62]:
+# In[ ]:
 
 
 pd_aemet["temp"] = [media([pmax,pmin])for pmax,pmin in zip(pd_aemet["tamax"].values, pd_aemet["tamin"].values)]
@@ -325,7 +334,7 @@ pd_aemet["temp"] = [media([pmax,pmin])for pmax,pmin in zip(pd_aemet["tamax"].val
 
 # ### [1.2.6]- Rename & Colocar
 
-# In[63]:
+# In[ ]:
 
 
 pd_aemet =pd_aemet.rename(columns={"idema":"ESTACION",
@@ -337,7 +346,7 @@ pd_aemet =pd_aemet.rename(columns={"idema":"ESTACION",
                              })
 
 
-# In[64]:
+# In[ ]:
 
 
 pd_aemet
@@ -345,19 +354,19 @@ pd_aemet
 
 # ### [1.2.7] - FIltrar datos de ayer ( Se ejecuta a las 3 AM del dia siguiente)
 
-# In[69]:
+# In[ ]:
 
 
 ayer = '%02d' % (datetime.date.today()+datetime.timedelta(days=-1)).day
 
 
-# In[72]:
+# In[ ]:
 
 
 pd_aemet = pd_aemet[pd_aemet["DIA"]== ayer]
 
 
-# In[74]:
+# In[ ]:
 
 
 #pd_aemet
@@ -365,7 +374,7 @@ pd_aemet = pd_aemet[pd_aemet["DIA"]== ayer]
 
 # ### [1.2.8] - Select
 
-# In[36]:
+# In[ ]:
 
 
 columnas = ["ESTACION","ANO","MES","DIA","HORA","FECHA"]
@@ -373,7 +382,7 @@ for elem in c_magnitudes_aemet_hoy:
     columnas.append(elem) 
 
 
-# In[37]:
+# In[ ]:
 
 
 pd_aemet = pd_aemet[columnas]
@@ -381,7 +390,7 @@ pd_aemet = pd_aemet[columnas]
 
 # ### [1.2.9] - Tipos
 
-# In[38]:
+# In[ ]:
 
 
 for elem in c_magnitudes_aemet_hoy:
@@ -390,7 +399,7 @@ for elem in c_magnitudes_aemet_hoy:
 
 # ### [1.2.10] - ESTACION -> CODIGO_CORTO
 
-# In[39]:
+# In[ ]:
 
 
 pd_aemet = pd_aemet.rename(columns={"ESTACION":"CODIGO_CORTO"})
@@ -400,7 +409,7 @@ pd_aemet = pd_aemet.rename(columns={"ESTACION":"CODIGO_CORTO"})
 
 # ####  [1.2.11.0] - AVERAGE DIA - (Presion,Temperatura,Velocidad del viento y Direccion del viento) + SUMA (Precipitaciones)
 
-# In[40]:
+# In[ ]:
 
 
 pd_aemet_media = pd_aemet.groupby(by=["CODIGO_CORTO","ANO","MES","DIA","FECHA"]).agg({'81':'mean',
@@ -412,13 +421,13 @@ pd_aemet_media = pd_aemet.groupby(by=["CODIGO_CORTO","ANO","MES","DIA","FECHA"])
 
 # ### [1.2.12] - "None" a Nulo
 
-# In[41]:
+# In[ ]:
 
 
 pd_aemet_media = pd_aemet_media.replace(('None',None),np.nan)
 
 
-# In[42]:
+# In[ ]:
 
 
 pd_final = pd_aemet_media
@@ -426,7 +435,7 @@ pd_final = pd_aemet_media
 
 # # [2] -Export
 
-# In[43]:
+# In[ ]:
 
 
 pd_final.head(5)

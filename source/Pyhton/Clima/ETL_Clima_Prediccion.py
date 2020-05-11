@@ -34,7 +34,7 @@
 
 # # [0] - Inicialización
 
-# In[65]:
+# In[ ]:
 
 
 from __future__ import print_function
@@ -50,16 +50,25 @@ import pandas as pd
 import requests
 import numpy as np
 import re as reg
+import json
 from pyspark.sql.types import StructField,StringType,IntegerType,StructType,FloatType
 
 
-# In[66]:
+# In[ ]:
 
 
 spark = SparkSession.builder.appName('clima_prediccion').getOrCreate()
 
 
 # # [1] -  Datos
+
+# In[ ]:
+
+
+f = open("/home/rulicering/Datos_Proyecto_Ozono/Credenciales/Credenciales.json")
+credenciales = json.load(f)
+AEMET_API_KEY = credenciales["aemet"]["api_key"]
+
 
 # ## [1.0]  ----------------------- AEMET -----------------------
 
@@ -71,17 +80,17 @@ spark = SparkSession.builder.appName('clima_prediccion').getOrCreate()
 
 # ### [1.0.0] - Codegen + API
 
-# In[67]:
+# In[ ]:
 
 
 configuration = swagger_client.Configuration()
-configuration.api_key['api_key'] = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcm95ZWN0by5vem9uby5jb250YWN0QGdtYWlsLmNvbSIsImp0aSI6ImNlZDZiZWQ2LTUyN2EtNGQ2Yi1iOGMyLWU1YmRlNzk3YzYzZSIsImlzcyI6IkFFTUVUIiwiaWF0IjoxNTg2NzE3MTE2LCJ1c2VySWQiOiJjZWQ2YmVkNi01MjdhLTRkNmItYjhjMi1lNWJkZTc5N2M2M2UiLCJyb2xlIjoiIn0.U3b4ELAg-9eJcwgpzr4QgkF-Yj6jb9gw0DOa8sqAwHo'
+configuration.api_key['api_key'] = AEMET_API_KEY
 api_predicciones = swagger_client.PrediccionesEspecificasApi(swagger_client.ApiClient(configuration))
 
 
 # ### [1.0.1] - [FUNCIONES] -  Formateo datos
 
-# In[68]:
+# In[ ]:
 
 
 def convertir_a_diccionario(raw,inicio,tipo):
@@ -151,7 +160,7 @@ def convertir_a_diccionario(raw,inicio,tipo):
     return diccionario
 
 
-# In[69]:
+# In[ ]:
 
 
 def dic_to_df(dic):
@@ -224,7 +233,7 @@ def dic_to_df(dic):
     return True
 
 
-# In[70]:
+# In[ ]:
 
 
 def data_to_sparkdf(data):
@@ -272,7 +281,7 @@ def data_to_sparkdf(data):
 
 # ### [1.0.2]  [FUNCIONES] - Request datos
 
-# In[71]:
+# In[ ]:
 
 
 def req_to_df(codigo):
@@ -289,7 +298,7 @@ def req_to_df(codigo):
     return df_aemet
 
 
-# In[72]:
+# In[ ]:
 
 
 def datos_predicciones_aemet(codigos_zonas):
@@ -307,20 +316,20 @@ def datos_predicciones_aemet(codigos_zonas):
 
 # #### [1.0.3.0] -  Obtenemos los datos
 
-# In[73]:
+# In[ ]:
 
 
 codigos_zonas = ["28079"]
 
 
-# In[74]:
+# In[ ]:
 
 
 df_predicciones = datos_predicciones_aemet(codigos_zonas)
 #datos_predicciones_aemet(cod_estaciones_aemet_14,fecha_ini_str,fecha_fin_str)
 
 
-# In[75]:
+# In[ ]:
 
 
 df_predicciones.show()
@@ -328,7 +337,7 @@ df_predicciones.show()
 
 # #### [1.0.3.1] -Columnas -> ANO,MES,DIA,FECHA
 
-# In[76]:
+# In[ ]:
 
 
 df_predicciones = df_predicciones.withColumn("ANO",df_predicciones["FECHA"][0:4])
@@ -339,7 +348,7 @@ df_predicciones = df_predicciones.withColumn("FECHA",F.concat(df_predicciones["F
 
 # #### [1.0.3.2] - Direccion viento -> Grados
 
-# In[77]:
+# In[ ]:
 
 
 def dir_to_grad(direccion):
@@ -354,19 +363,19 @@ def dir_to_grad(direccion):
     if(direccion == 'C'): return None    
 
 
-# In[78]:
+# In[ ]:
 
 
 my_udf = F.udf(lambda x: dir_to_grad(x),IntegerType())
 
 
-# In[79]:
+# In[ ]:
 
 
 df_predicciones = df_predicciones.withColumn("DIRECCION",my_udf(df_predicciones["DIRECCION"]))
 
 
-# In[80]:
+# In[ ]:
 
 
 df_predicciones.show()
@@ -374,13 +383,13 @@ df_predicciones.show()
 
 # #### [1.0.3.3] - Rename
 
-# In[81]:
+# In[ ]:
 
 
 pd_predicciones = df_predicciones.toPandas()
 
 
-# In[82]:
+# In[ ]:
 
 
 pd_predicciones =pd_predicciones.rename(columns={ "VIENTO":"81",                         
@@ -393,7 +402,7 @@ pd_predicciones =pd_predicciones.rename(columns={ "VIENTO":"81",
 
 # #### [1.0.3.4] - Types
 
-# In[83]:
+# In[ ]:
 
 
 pd_predicciones["ANO"] =pd_predicciones["ANO"].astype(int)
@@ -404,19 +413,19 @@ pd_predicciones["FECHA"] =pd_predicciones["FECHA"].astype(int)
 
 # # [2] - Formato
 
-# In[84]:
+# In[ ]:
 
 
 cols = pd_predicciones.columns.tolist()
 
 
-# In[85]:
+# In[ ]:
 
 
 cols = cols[0:1]+ cols[-3:] + cols[1:-3]
 
 
-# In[87]:
+# In[ ]:
 
 
 pd_predicciones = pd_predicciones[cols]
@@ -424,19 +433,19 @@ pd_predicciones = pd_predicciones[cols]
 
 # # [3] -Export
 
-# In[82]:
+# In[ ]:
 
 
 pd_final = pd_predicciones
 
 
-# In[84]:
+# In[ ]:
 
 
 #pd_final.head(5)
 
 
-# In[77]:
+# In[ ]:
 
 
 #BackUp
@@ -444,7 +453,7 @@ hoy = datetime.date.today().strftime("%Y-%m-%d")
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima_Prediccion-"+ hoy + ".csv")
 
 
-# In[78]:
+# In[ ]:
 
 
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-hoy.csv")
