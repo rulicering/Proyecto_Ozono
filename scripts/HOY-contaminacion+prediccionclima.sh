@@ -10,7 +10,7 @@ echo "---------------------------ESTACIONES---------------------------"
 python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Estaciones/ETL_Estaciones.py
 echo "---------------------------CONTAMINACION HOY---------------------------"
 python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Contaminacion/ETL_Contaminacion_Dia_Actual.py
-echo "---------------------------PREDICCION MAÑANA---------------------------"
+echo "---------------------------PREDICCION CLIMA MAÑANA---------------------------"
 python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Clima/ETL_Clima_Prediccion.py
 }
 
