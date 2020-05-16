@@ -122,7 +122,7 @@ pd_clima_excel = pd.read_excel("https://datos.madrid.es/egob/catalogo/300360-0-m
 # In[51]:
 
 
-pd_clima = pd_clima_excel[['CÓDIGO_CORTO', 'ESTACIÓN', 'DIRECCIÓN', 'ALTITUD','LONGITUD', 'LATITUD']]
+pd_clima = pd_clima_excel[['CÓDIGO_CORTO', 'ESTACIÓN', 'DIRECCION', 'ALTITUD','LONGITUD', 'LATITUD']]
 pd_clima.insert(6,"MIDE_CLIMA",1)
 
 
