@@ -58,7 +58,6 @@ from pyspark.sql.types import StructField,StringType,IntegerType,StructType,Floa
 
 
 spark = SparkSession.builder.appName('clima_prediccion').getOrCreate()
-spark.sparkContext.setLogLevel('ERROR')
 
 
 # # [1] -  Datos
@@ -320,7 +319,6 @@ def datos_predicciones_aemet(codigos_zonas):
 # In[ ]:
 
 
-#Código zona MADRID CIUDAD
 codigos_zonas = ["28079"]
 
 
@@ -328,6 +326,7 @@ codigos_zonas = ["28079"]
 
 
 df_predicciones = datos_predicciones_aemet(codigos_zonas)
+#datos_predicciones_aemet(cod_estaciones_aemet_14,fecha_ini_str,fecha_fin_str)
 
 
 # In[ ]:
@@ -374,6 +373,12 @@ my_udf = F.udf(lambda x: dir_to_grad(x),IntegerType())
 
 
 df_predicciones = df_predicciones.withColumn("DIRECCION",my_udf(df_predicciones["DIRECCION"]))
+
+
+# In[ ]:
+
+
+df_predicciones.show()
 
 
 # #### [1.0.3.3] - Rename
@@ -427,7 +432,6 @@ pd_predicciones = pd_predicciones[cols]
 
 
 # # [3] -Export
-#     La prediccion para MAÑANA, se ejecuta a las 11:50 PM
 
 # In[ ]:
 
@@ -438,31 +442,30 @@ pd_final = pd_predicciones
 # In[ ]:
 
 
-nuevo = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-anterior = datetime.date.today().strftime("%Y-%m-%d")
+#pd_final.head(5)
 
 
 # In[ ]:
+
+hoy = datetime.date.today().strftime("%Y-%m-%d")
+ayer = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 #BackUp
-pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima_Prediccion-"+ nuevo + ".csv")
+pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima_Prediccion-"+ hoy + ".csv")
 
 
 # In[ ]:
 
 
-pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ nuevo + ".csv")
-print("[INFO] - Clima_Prediccion-", hoy ,".csv --- Created successfully")
-
-
-# In[ ]:
-
+pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ hoy + ".csv")
 
 #Borrar la de ayer
 try:
-    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ anterior + ".csv")
-     print("[INFO] - Clima_Prediccion-", anterior,".csv --- Removed successfully")
+    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ ayer + ".csv")
+     print("[INFO] - Clima_Prediccion-", ayer,".csv --- Removed successfully")
 except:
-    print("[ERROR] - Clima_Prediccion-", anterior,".csv --- Could not been removed")
-
+    print("[ERROR] - Clima_Prediccion-", ayer,".csv --- Could not been removed")
+#     pprint(api_response)
+# except ApiException as e:
+#     print("Exception: %s\n" % e)

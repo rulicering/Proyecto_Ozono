@@ -243,6 +243,7 @@ pd_media_dia = pd_media_dia[cols]
 
 
 hoy = datetime.date.today().strftime("%Y-%m-%d")
+ayer = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 # ## [5.0] - Dia x Horas
@@ -263,8 +264,15 @@ pd_diaxhoras.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminaci
 # In[49]:
 
 
-pd_diaxhoras.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_diaxhoras.csv")
+pd_diaxhoras.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_diaxhoras-"+ hoy +".csv")
 
+
+#Borrar la de ayer
+try:
+    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_diaxhoras-"+ ayer +".csv")
+     print("[INFO] - Contaminacion_diaxhoras-", ayer,".csv --- Removed successfully")
+except:
+    print("[ERROR] - Contaminacion_diaxhoras-", ayer,".csv --- Could not been removed")
 
 # ## [5.1] -Media dia
 
@@ -278,11 +286,18 @@ pd_diaxhoras.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminaci
 
 
 #BackUp
-pd_media_dia.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/BackUp/Contaminacion_mediadia-" + hoy +".csv")
+pd_media_dia.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/BackUp/Contaminacion_mediadia-" + hoy +".csv",float_format = '%.8f'))
 
 
 # In[52]:
 
 
-pd_media_dia.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia.csv")
+pd_media_dia.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia-" + hoy +".csv",float_format = '%.8f')
+
+#Borrar la de ayer
+try:
+    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia-" + ayer +".csv")
+     print("[INFO] - Contaminacion_mediadia-", ayer,".csv --- Removed successfully")
+except:
+    print("[ERROR] - Contaminacion_mediadia-", ayer,".csv --- Could not been removed")
 

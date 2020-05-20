@@ -45,14 +45,16 @@ spark = SparkSession.builder.appName('contaminacion').getOrCreate()
 
 # # [1] Datos
 
-# ## [1.0] - Carga de ficheros (Aire, Clima, Estaciones y Calendario) HOY
+## [1.0] - Carga de ficheros (Aire, Clima, Estaciones y Calendario) HOY
+    #Se ejecuta a las 2 de la mañana del dia siguiente
 
 # In[3]:
+dia = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
 
-df_aire = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia.csv',inferSchema= True,header=True)
-df_clima = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-hoy.csv',inferSchema= True,header=True)
-df_estaciones = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-hoy.csv',inferSchema= True,header=True)
+df_aire = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia-" + dia +".csv",inferSchema= True,header=True)
+df_clima = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-' + dia +  '.csv',inferSchema= True,header=True)
+df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + dia +".csv",inferSchema= True,header=True)
 df_calendario = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Calendario/Calendario_2001-2020.csv',inferSchema= True,header=True)
 
 
@@ -309,17 +311,26 @@ pd_datos_hoy["CODIGO_CORTO"] = pd_datos_hoy["CODIGO_CORTO"].astype(int)
 
 # In[43]:
 
+#EL join se ejecuta a las 2 am del dia siguiente. 1 día de diferencia
+nuevo = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+anterior = (datetime.date.today() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 
 #Versiones
-hoy = datetime.date.today().strftime("%Y-%m-%d")
-pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-Dia-" + hoy + ".csv")
+
+pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-Dia-" + nuevo + ".csv")
 
 
 # In[44]:
 
 
-pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-hoy.csv")
+pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-Dia-" + nuevo + ".csv")
 
+#Borrar la de ayer
+try:
+    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-Dia-" + anterior + ".csv")
+     print("[INFO] - Datos-Dia-", anterior,".csv --- Removed successfully")
+except:
+    print("[ERROR] - Datos-Dia-", anterior,".csv --- Could not been removed")
 
 # # [6] - UNIR A DATO FINAL
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # [o3] - Proyecto Ozono - ETL_Clima_Dia_Actual  - v0
+# # [o3] - Proyecto Ozono - ETL_Clima_Dia_v0
 
 # # [INFO]
 #     
@@ -29,7 +29,7 @@
 #             1.2.10 ESTACION -> CODIGO_CORTO
 #             1.2.11 Valores diarios
 #                 1.2.11.0 AVERAGE DIA (Presion,temperatura,Velocidad-Direccion del viento)+SUMA(Precipitaciones)
-#             1.2.13 "None" a Nulo
+#             1.2.12 "None" a Nulo
 #     2. Export
 #             
 #             
@@ -61,6 +61,7 @@ from pyspark.sql.types import StructField,StringType,IntegerType,StructType,Floa
 
 
 spark = SparkSession.builder.appName('clima_hoy').getOrCreate()
+spark.sparkContext.setLogLevel('ERROR')
 
 
 # # [1] -  Datos
@@ -73,12 +74,19 @@ credenciales = json.load(f)
 AEMET_API_KEY = credenciales["aemet"]["api_key"]
 
 
-# ## [1.0] - Carga fichero Estaciones HOY
+# ## [1.0] - Carga fichero Estaciones
+#     Se ejecuta a las 2 AM del día siguiente, 1 dia de diferencia.
 
 # In[ ]:
 
 
-df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-hoy.csv",inferSchema= True, header= True)
+ayer = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+# In[ ]:
+
+
+df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + ayer +".csv",inferSchema= True, header= True)
 #Fuerzo que se ejecute para que luego al filtrar no tenga que volver a leer el csv
 df_estaciones = spark.createDataFrame(df_estaciones.toPandas())
 
@@ -352,7 +360,7 @@ pd_aemet =pd_aemet.rename(columns={"idema":"ESTACION",
 pd_aemet
 
 
-# ### [1.2.7] - FIltrar datos de ayer ( Se ejecuta a las 3 AM del dia siguiente)
+# ### [1.2.7] - FIltrar datos de ayer ( Se ejecuta a las 2 AM del dia siguiente)
 
 # In[ ]:
 
@@ -438,19 +446,32 @@ pd_final = pd_aemet_media
 # In[ ]:
 
 
-pd_final.head(5)
+#Los datos de ayer se cargan a las 3 am de hoy. 1 dia de diferencia
+nuevo = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+anterior = (datetime.date.today() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 
 
 # In[ ]:
 
 
 #Versiones
-hoy = datetime.date.today().strftime("%Y-%m-%d")
-pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima-"+ hoy + ".csv")
+pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima-"+ nuevo + ".csv")
 
 
 # In[ ]:
 
 
-pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-hoy.csv")
+pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-"+ nuevo + ".csv")
+print("[INFO] - Clima-", hoy ,".csv --- Created successfully")
+
+
+# In[ ]:
+
+
+#Borrar la de ayer
+try:
+    os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-"+ anterior + ".csv")
+     print("[INFO] - Clima-", ayer,".csv --- Removed successfully")
+except:
+    print("[ERROR] - Clima-", ayer,".csv --- Could not been removed")
 
