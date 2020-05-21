@@ -277,7 +277,7 @@ print("[INFO] - Contaminacion_diaxhoras-", hoy ,".csv --- Created successfully")
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_diaxhoras-"+ ayer +".csv")
-     print("[INFO] - Contaminacion_diaxhoras-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Contaminacion_diaxhoras-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Contaminacion_diaxhoras-", ayer,".csv --- Could not been removed")
 
@@ -310,7 +310,7 @@ print("[INFO] - Contaminacion_mediadia-", hoy ,".csv --- Created successfully")
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Contaminacion/Contaminacion_mediadia-" + ayer +".csv")
-     print("[INFO] - Contaminacion_mediadia-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Contaminacion_mediadia-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Contaminacion_mediadia-", ayer,".csv --- Could not been removed")
 

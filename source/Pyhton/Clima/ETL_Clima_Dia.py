@@ -471,7 +471,7 @@ print("[INFO] - Clima-", hoy ,".csv --- Created successfully")
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-"+ anterior + ".csv")
-     print("[INFO] - Clima-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Clima-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Clima-", ayer,".csv --- Could not been removed")
 

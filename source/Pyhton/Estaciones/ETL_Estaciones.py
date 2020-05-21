@@ -969,7 +969,7 @@ print("[INFO] - Estaciones-", hoy ,".csv --- Created successfully")
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + ayer + ".csv")
-     print("[INFO] - Estaciones-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Estaciones-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Estaciones-", ayer,".csv --- Could not been removed")
 

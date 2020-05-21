@@ -340,7 +340,7 @@ pd_prediccion.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Prediccion
 
 
 pd_prediccion.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Predicciones/Prediccion-" + hoy + ".csv")
- print("[INFO] - Prediccion-", hoy,".csv --- Generated successfully")
+print("[INFO] - Prediccion-", hoy,".csv --- Generated successfully")
 
 
 # In[ ]:
@@ -349,7 +349,7 @@ pd_prediccion.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Prediccion
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Predicciones/Prediccion-" + ayer + ".csv")
-     print("[INFO] - Prediccion-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Prediccion-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Prediccion-", ayer,".csv --- Could not been removed")
 

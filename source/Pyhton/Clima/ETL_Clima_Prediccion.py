@@ -453,7 +453,7 @@ pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Cl
 
 
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ nuevo + ".csv")
-print("[INFO] - Clima_Prediccion-", hoy ,".csv --- Created successfully")
+print("[INFO] - Clima_Prediccion-", nuevo ,".csv --- Created successfully")
 
 
 # In[ ]:
@@ -462,7 +462,7 @@ print("[INFO] - Clima_Prediccion-", hoy ,".csv --- Created successfully")
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ anterior + ".csv")
-     print("[INFO] - Clima_Prediccion-", anterior,".csv --- Removed successfully")
+    print("[INFO] - Clima_Prediccion-", anterior,".csv --- Removed successfully")
 except:
     print("[ERROR] - Clima_Prediccion-", anterior,".csv --- Could not been removed")
 
