@@ -5,7 +5,7 @@
 
 # # [0] - Inicialización
 
-# In[1]:
+# In[ ]:
 
 
 import findspark
@@ -31,7 +31,7 @@ from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
 
 
-# In[2]:
+# In[ ]:
 
 
 spark = SparkSession.builder.appName('predictor').getOrCreate()
@@ -46,19 +46,19 @@ spark.sparkContext.setLogLevel('ERROR')
 # In[ ]:
 
 
-ayer = (datetime.date.today() + datetime.timedelta(days = -1)).strftime("%Y%m%d")
-hoy = datetime.date.today().strftime("%Y%m%d")
+ayer = (datetime.date.today() + datetime.timedelta(days = -1)).strftime("%Y-%m-%d")
+hoy = datetime.date.today().strftime("%Y-%m-%d")
 
 
-# In[3]:
+# In[ ]:
 
 
 df_datos = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv',inferSchema= True,header=True)
-df_clima_prediccion = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Clima_Prediccion-"+ hoy + ".csv",inferSchema= True,header=True)
+df_clima_prediccion = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima_Prediccion-"+ hoy + ".csv",inferSchema= True,header=True)
 df_calendario = spark.read.csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Calendario/Calendario_2001-2020.csv',inferSchema= True,header=True)
 
 
-# In[4]:
+# In[ ]:
 
 
 df_datos = df_datos.drop("_c0")
@@ -66,7 +66,7 @@ df_clima_prediccion = df_clima_prediccion.drop("_c0")
 df_calendario = df_calendario.drop("_c0")
 
 
-# In[5]:
+# In[ ]:
 
 
 magnitudes= df_datos.columns[8:]
@@ -74,7 +74,7 @@ magnitudes_clima = df_datos.columns[-5:]
 magnitudes_aire = df_datos.columns[8:-5]
 
 
-# In[6]:
+# In[ ]:
 
 
 dic_clima = { "VIENTO":"81",
@@ -87,31 +87,38 @@ dic_clima = { "VIENTO":"81",
 
 # ## [1.1] - Datos para prediccion - Prediccion clima + Calendario + Estaciones
 
-# In[8]:
+# In[ ]:
+
+
+ayer = (datetime.date.today() + datetime.timedelta(days = -1)).strftime("%Y%m%d")
+hoy = datetime.date.today().strftime("%Y%m%d")
+
+
+# In[ ]:
 
 
 df_estaciones_aire = df_datos.filter(df_datos["FECHA"]== ayer).select("CODIGO_CORTO")
 
 
-# In[9]:
+# In[ ]:
 
 
 cod_estaciones_aire = [elem[0] for elem in df_estaciones_aire.collect()]
 
 
-# In[10]:
+# In[ ]:
 
 
 cod_estaciones_aire.sort()
 
 
-# In[11]:
+# In[ ]:
 
 
 df_hoy = df_calendario.filter(df_calendario["FECHA"]== hoy)
 
 
-# In[12]:
+# In[ ]:
 
 
 #Calendario + Magnitudes aire a null
@@ -119,28 +126,28 @@ for magnitud in magnitudes_aire:
     df_hoy = df_hoy.withColumn(magnitud,F.lit(None))
 
 
-# In[13]:
+# In[ ]:
 
 
 #Calendario + Prediccion clima
 df_clima_hoy = df_hoy.join(df_clima_prediccion,on= "FECHA")
 
 
-# In[14]:
+# In[ ]:
 
 
 #Estaciones cross datos clima y calendario
 df_datos_hoy = df_estaciones_aire.crossJoin(df_clima_hoy)
 
 
-# In[16]:
+# In[ ]:
 
 
 cols = df_datos_hoy.columns
 cols = cols[0:1] + cols[19:22]+ cols[1:5]+ cols[5:19] + cols[22:]
 
 
-# In[17]:
+# In[ ]:
 
 
 df_datos_hoy = df_datos_hoy.select(cols)
@@ -151,7 +158,7 @@ df_datos_hoy = df_datos_hoy.select(cols)
 #         se hace la media por estacion del historial de precipitaciones
 #         cogiendo datos de +-10 días al dia de hoy de cada año anterior
 
-# In[18]:
+# In[ ]:
 
 
 def probabilidad_a_lluvia_presion_ayer_aire_a_null(df_datos,df_datos_hoy):
@@ -186,7 +193,7 @@ def probabilidad_a_lluvia_presion_ayer_aire_a_null(df_datos,df_datos_hoy):
     return df_datos_hoy
 
 
-# In[19]:
+# In[ ]:
 
 
 df_datos_hoy = probabilidad_a_lluvia_presion_ayer_aire_a_null(df_datos,df_datos_hoy)
@@ -194,7 +201,7 @@ df_datos_hoy = probabilidad_a_lluvia_presion_ayer_aire_a_null(df_datos,df_datos_
 
 # ## [1.2] - Union Datos + Datos hoy
 
-# In[21]:
+# In[ ]:
 
 
 df_datos= df_datos.union(df_datos_hoy)
@@ -202,13 +209,13 @@ df_datos= df_datos.union(df_datos_hoy)
 
 # ## [1.3] - Dar cada fila de datos +  contaminacion ayer
 
-# In[22]:
+# In[ ]:
 
 
 ventana = Window.partitionBy("CODIGO_CORTO").orderBy("FECHA")
 
 
-# In[23]:
+# In[ ]:
 
 
 for magnitud in magnitudes_aire:
@@ -232,7 +239,7 @@ for magnitud in magnitudes_aire:
 #     Se hace 1 a 1 para cada magnitud de contaminación
 #     
 
-# In[26]:
+# In[ ]:
 
 
 cols_comunes = df_datos.columns[0:8] + magnitudes_clima
@@ -240,7 +247,7 @@ cols_comunes = df_datos.columns[0:8] + magnitudes_clima
 
 # ## [2.1] - GBT
 
-# In[47]:
+# In[ ]:
 
 
 l_predicciones = []
@@ -281,20 +288,20 @@ for magnitud in magnitudes_aire:
 
 # ### [2.1.0] - Unimos las predicciones por magnitud
 
-# In[33]:
+# In[ ]:
 
 
 df_prediccion = l_predicciones[0]
 
 
-# In[34]:
+# In[ ]:
 
 
 for i in range(1,len(l_predicciones)):
     df_prediccion = df_prediccion.join(l_predicciones[i],on= "CODIGO_CORTO",how='outer')
 
 
-# In[36]:
+# In[ ]:
 
 
 pd_prediccion = df_prediccion.toPandas()
@@ -302,26 +309,26 @@ pd_prediccion = df_prediccion.toPandas()
 
 # # [4] - FORMATO
 
-# In[39]:
+# In[ ]:
 
 
 cols = pd_prediccion.columns.tolist()
 
 
-# In[40]:
+# In[ ]:
 
 
 regex = reg.compile("P_")
 cols_predicciones = [elem for elem in list(filter(regex.search,cols))]
 
 
-# In[44]:
+# In[ ]:
 
 
 cols = cols[0:1]+cols_predicciones
 
 
-# In[46]:
+# In[ ]:
 
 
 pd_prediccion = pd_prediccion[cols]
@@ -329,14 +336,21 @@ pd_prediccion = pd_prediccion[cols]
 
 # # [5] - EXPORTAR
 
-# In[50]:
+# In[ ]:
+
+
+ayer = (datetime.date.today() + datetime.timedelta(days = -1)).strftime("%Y-%m-%d")
+hoy = datetime.date.today().strftime("%Y-%m-%d")
+
+
+# In[ ]:
 
 
 #Versiones
 pd_prediccion.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Predicciones/BackUp/Prediccion-" + hoy + ".csv")
 
 
-# In[49]:
+# In[ ]:
 
 
 pd_prediccion.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Predicciones/Prediccion-" + hoy + ".csv")

@@ -372,7 +372,7 @@ pd_datos_final = pd.concat([pd_datos,pd_datos_hoy])
 
 
 #Versiones
-pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Join_diario/Datos-" + hoy + ".csv")
+pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Join_diario/Datos-" + nuevo + ".csv")
 
 
 # In[ ]:

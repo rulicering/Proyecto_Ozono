@@ -462,7 +462,7 @@ pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/BackUp/Cl
 
 
 pd_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Clima/Clima-"+ nuevo + ".csv")
-print("[INFO] - Clima-", hoy ,".csv --- Created successfully")
+print("[INFO] - Clima-", nuevo ,".csv --- Created successfully")
 
 
 # In[ ]:
