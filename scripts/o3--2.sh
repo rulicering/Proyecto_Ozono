@@ -15,6 +15,8 @@ echo "---------------------------[AYER] - JOIN ---------------------------"
 python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Join/ETL_Join_Dia.py
 echo "---------------------------[HOY] - PREDICTOR ---------------------------"
 python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Predictor/Predictor.py
+echo "---------------------------[HOY] - PAI ---------------------------"
+python3 /home/rulicering/Proyecto_Ozono/source/Pyhton/Predictor/PAI.py
 }
 
 etl_hoy_climayjoin 2>&1 | tee -a $LOG -a $LOG_HOY >/dev/null

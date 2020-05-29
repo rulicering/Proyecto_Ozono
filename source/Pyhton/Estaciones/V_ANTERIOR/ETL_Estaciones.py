@@ -5,7 +5,7 @@
 
 # # [INFO]
 # 
-#     [--1] -> CLIMA AEMET (2014-2018) |  [--2] -> CLIMA AEMET +CLIMA AYUNT (2019-NOW)
+#     [--1] -> CLIMA AEMET (2001-2018) |  [--2] -> CLIMA AEMET +CLIMA AYUNT (2019-NOW)
 # 
 #     Agrupar AEMET: AIRE + CLIMA AEMET -> Distancia mínima
 #     
@@ -47,7 +47,7 @@
 
 # # [0] - Inicialización
 
-# In[44]:
+# In[ ]:
 
 
 from __future__ import print_function
@@ -68,89 +68,91 @@ import time
 import swagger_client
 from swagger_client.rest import ApiException
 from pprint import pprint
+
+#AUX
 import datetime
 import requests,json
 import re as reg
 
 
-# In[45]:
+# In[ ]:
 
 
 spark = SparkSession.builder.appName('estaciones').getOrCreate()
+
+
+# In[ ]:
+
+
+spark.sparkContext.setLogLevel('ERROR')
 
 
 # # [1] - AYUNT
 
 # ## [1.0] - ESTACIONES AIRE AYUNT
 
-# In[46]:
+# In[ ]:
 
 
 pd_aire_excel = pd.read_excel("https://datos.madrid.es/egob/catalogo/212629-0-estaciones-control-aire.xls")
 
 
-# In[47]:
+# In[ ]:
 
 
 pd_aire = pd_aire_excel[['CODIGO_CORTO', 'ESTACION', 'DIRECCION', 'ALTITUD','LONGITUD', 'LATITUD']]
 pd_aire.insert(6,"MIDE_AIRE",1)
 
 
-# In[48]:
+# In[ ]:
 
 
 pd_aire["CODIGO_CORTO"] = pd_aire[["CODIGO_CORTO"]].astype(str)
 
 
-# In[49]:
+# In[ ]:
 
 
-print("Número de estaciones medición calidad del aire: %d" % pd_aire["ESTACION"].count())
-
-#for elem in pd_aire[["CODIGO_CORTO", "ESTACION"]].values.tolist():
-#    print(elem)
+print("[INFO] - Número de estaciones medición calidad del aire: %d" % pd_aire["ESTACION"].count())
 
 
 # ## [1.1] -  ESTACIONES CLIMA AYUNT
 
-# In[50]:
+# In[ ]:
 
 
 pd_clima_excel = pd.read_excel("https://datos.madrid.es/egob/catalogo/300360-0-meteorologicos-estaciones.xls")
 
 
-# In[51]:
+# In[ ]:
 
 
 pd_clima = pd_clima_excel[['CÓDIGO_CORTO', 'ESTACIÓN', 'DIRECCION', 'ALTITUD','LONGITUD', 'LATITUD']]
 pd_clima.insert(6,"MIDE_CLIMA",1)
 
 
-# In[52]:
+# In[ ]:
 
 
 #Modificamos los nombres de las columnas -> sin tildes para que cuadre luego al hacer el join
 pd_clima = pd_clima.rename(columns = {"CÓDIGO_CORTO" : "CODIGO_CORTO",'ESTACIÓN': 'ESTACION', 'DIRECCIÓN':'DIRECCION'})
 
 
-# In[53]:
+# In[ ]:
 
 
 pd_clima["CODIGO_CORTO"] = pd_clima[["CODIGO_CORTO"]].astype(str)
 
 
-# In[54]:
+# In[ ]:
 
 
-print("Número de estaciones medición clima ayuntamiento: %d" % pd_clima["ESTACION"].count())
-
-#for elem in pd_clima[["CODIGO_CORTO", "ESTACION"]].values.tolist():
-#    print(elem)
+print("[INFO] - Número de estaciones medición clima ayuntamiento: %d" % pd_clima["ESTACION"].count())
 
 
 # ## [1.2] - AYUNTAMIENTO = AIRE + CLIMA
 
-# In[55]:
+# In[ ]:
 
 
 #No se puede hacer el merge por mas campos porque no son exactamente iguales por lo que hay que filtrar
@@ -162,7 +164,7 @@ pd_estaciones_ayunt = pd_estaciones_ayunt.fillna({"MIDE_AIRE":0,"MIDE_CLIMA":0})
 pd_estaciones_ayunt = pd_estaciones_ayunt.fillna("Nulo")
 
 
-# In[56]:
+# In[ ]:
 
 
 #Creamos columnas nuevas mergeando las _X y _y 
@@ -173,7 +175,7 @@ columnas_y = list(filter(None,[columna if "_y" in columna else None
                                for columna in columnas]))
 
 
-# In[57]:
+# In[ ]:
 
 
 #Creamos las nuevas columnas mergeando 
@@ -183,7 +185,7 @@ for x,y in zip(columnas_x,columnas_y):
                                                     pd_estaciones_ayunt[y])]
 
 
-# In[58]:
+# In[ ]:
 
 
 #Quitamos las columnas duplicadas por el merge _x y _y
@@ -194,28 +196,28 @@ columnas_a_coger = list(filter(None,
 pd_estaciones_ayunt = pd_estaciones_ayunt[columnas_a_coger]
 
 
-# In[59]:
+# In[ ]:
 
 
 pd_estaciones_ayunt["CODIGO_CORTO"] = pd_estaciones_ayunt["CODIGO_CORTO"].astype(str)
 
 
-# In[60]:
+# In[ ]:
 
 
 pd_estaciones_ayunt = pd_estaciones_ayunt[['CODIGO_CORTO', 'ESTACION', 'DIRECCION',
        'ALTITUD', 'LONGITUD', 'LATITUD', 'MIDE_AIRE', 'MIDE_CLIMA']]
 
 
-# In[61]:
+# In[ ]:
 
 
-print("TOTAL ESTACIONES AYUNT: ", pd_estaciones_ayunt[["CODIGO_CORTO"]].count())
+print("[INFO] - TOTAL ESTACIONES AYUNT: ", pd_estaciones_ayunt[["CODIGO_CORTO"]].count())
 
 
 # ## [1.3] - Types
 
-# In[62]:
+# In[ ]:
 
 
 pd_estaciones_ayunt["MIDE_CLIMA"] = pd_estaciones_ayunt["MIDE_CLIMA"].round(1).astype(int)
@@ -226,37 +228,37 @@ pd_estaciones_ayunt["MIDE_AIRE"] = pd_estaciones_ayunt["MIDE_AIRE"].round(1).ast
 
 # ## [2.0] - ESTACIONES CLIMA AEMET
 
-# In[63]:
+# In[ ]:
 
 
 configuration = swagger_client.Configuration()
 configuration.api_key['api_key'] = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcm95ZWN0by5vem9uby5jb250YWN0QGdtYWlsLmNvbSIsImp0aSI6ImNlZDZiZWQ2LTUyN2EtNGQ2Yi1iOGMyLWU1YmRlNzk3YzYzZSIsImlzcyI6IkFFTUVUIiwiaWF0IjoxNTg2NzE3MTE2LCJ1c2VySWQiOiJjZWQ2YmVkNi01MjdhLTRkNmItYjhjMi1lNWJkZTc5N2M2M2UiLCJyb2xlIjoiIn0.U3b4ELAg-9eJcwgpzr4QgkF-Yj6jb9gw0DOa8sqAwHo'
 
 
-# In[64]:
+# In[ ]:
 
 
 api_valores = swagger_client.ValoresClimatologicosApi(swagger_client.ApiClient(configuration))
 
 
-# In[65]:
+# In[ ]:
 
 
 try:
     api_response = api_valores.inventario_de_estaciones__valores_climatolgicos_()
-    #print(api_response)
+    print(api_response)
 except ApiException as e:
     print("Exception: %s\n" % e)
 
 
-# In[66]:
+# In[ ]:
 
 
 r = requests.get(api_response.datos)
 data = r.content
 
 
-# In[67]:
+# In[ ]:
 
 
 def data_to_sparkdf(data):
@@ -319,19 +321,19 @@ def data_to_sparkdf(data):
     return spark.createDataFrame(diccionarios,schema = StructType(data_schema))  
 
 
-# In[68]:
+# In[ ]:
 
 
 df = data_to_sparkdf(data)
 
 
-# In[69]:
+# In[ ]:
 
 
 pd_estaciones_aemet = df.filter(df["PROVINCIA"]=="MADRID").orderBy("indicativo").toPandas()
 
 
-# In[70]:
+# In[ ]:
 
 
 def degrees_to_decimal(elem):
@@ -340,17 +342,16 @@ def degrees_to_decimal(elem):
     return (float(elem[6:])* (float(elem[0:2]) + float(elem[2:4])/60 + float(elem[4:6])/3600))
 
 
-# In[71]:
+# In[ ]:
 
 
 pd_estaciones_aemet["DIRECCION"] = pd_estaciones_aemet["nombre"]+ "-" + pd_estaciones_aemet["provincia"]
-#pd_mad["MIDE_CLIMA_AEMET"] = 1
 pd_estaciones_aemet.insert(7,"MIDE_CLIMA_AEMET",1)
 pd_estaciones_aemet["LONGITUD"] = [degrees_to_decimal(elem) for elem in pd_estaciones_aemet["longitud"]]
 pd_estaciones_aemet["LATITUD"] = [degrees_to_decimal(elem) for elem in pd_estaciones_aemet["latitud"]]
 
 
-# In[72]:
+# In[ ]:
 
 
 pd_estaciones_aemet = pd_estaciones_aemet[["indicativo","nombre","DIRECCION","altitud","LONGITUD","LATITUD","MIDE_CLIMA_AEMET"]]
@@ -359,14 +360,14 @@ pd_estaciones_aemet = pd_estaciones_aemet.rename(columns = {"indicativo":"CODIGO
                                   "altitud": "ALTITUD"})
 
 
-# In[73]:
+# In[ ]:
 
 
 pd_estaciones_aemet["CODIGO_CORTO"] = pd_estaciones_aemet["CODIGO_CORTO"].astype(str)
 pd_estaciones_aemet["ALTITUD"] = pd_estaciones_aemet["ALTITUD"].astype(str).astype(int)
 
 
-# In[74]:
+# In[ ]:
 
 
 #pd_estaciones_aemet
@@ -374,7 +375,7 @@ pd_estaciones_aemet["ALTITUD"] = pd_estaciones_aemet["ALTITUD"].astype(str).asty
 
 # ### [2.0.0] -  Descartar ESTACIONES fuera del area de Madrid ciudad (15 KM)
 
-# In[75]:
+# In[ ]:
 
 
 def haversine(p0,p1):
@@ -388,11 +389,12 @@ def haversine(p0,p1):
     R=6372.795477598
     a=(math.sin(rad*dlat/2))**2 + math.cos(rad*lat1)*math.cos(rad*lat2)*(math.sin(rad*dlon/2))**2
     distancia=2*R*math.asin(math.sqrt(a))
+    
     #Devuelve distancia en grados
     return distancia
 
 
-# In[76]:
+# In[ ]:
 
 
 # Radio madrid ciudad 15km (PARDO)
@@ -401,23 +403,22 @@ centro_de_madrid = [40.4165,-3.702561]
 pd_estaciones_aemet["MADRID_CIUDAD"] = [1 if haversine(x.split(','),centro_de_madrid) <= 15 else 0 for x in (pd_estaciones_aemet["LAT_LONG"])]
 
 
-# In[77]:
+# In[ ]:
 
 
 pd_estaciones_aemet = pd_estaciones_aemet[pd_estaciones_aemet["MADRID_CIUDAD"]==1]
 pd_estaciones_aemet = pd_estaciones_aemet[['CODIGO_CORTO', 'ESTACION', 'DIRECCION', 'ALTITUD', 'LONGITUD','LATITUD', 'MIDE_CLIMA_AEMET']]
 
 
-# In[78]:
+# In[ ]:
 
 
-print("TOTAL ESTACIONES AEMET: ", pd_estaciones_aemet[["CODIGO_CORTO"]].count())
-#pd_estaciones_aemet.head(10)
+print("[INFO] - TOTAL ESTACIONES AEMET: ", pd_estaciones_aemet[["CODIGO_CORTO"]].count())
 
 
 # ## [2.1] - ESTACIONES CLIMA AEMET HOY
 
-# In[79]:
+# In[ ]:
 
 
 api_observacion = swagger_client.ObservacionConvencionalApi(swagger_client.ApiClient(configuration))
@@ -425,7 +426,7 @@ api_observacion = swagger_client.ObservacionConvencionalApi(swagger_client.ApiCl
 
 # ### [2.1.0] - [FUNCION] -  Formateo datos
 
-# In[80]:
+# In[ ]:
 
 
 def data_to_sparkdf_HOY(data):
@@ -512,7 +513,7 @@ def data_to_sparkdf_HOY(data):
 
 # ### [2.1.1]  [FUNCIONES] - Request datos
 
-# In[81]:
+# In[ ]:
 
 
 def req_hoy_to_df(codigo):
@@ -525,10 +526,9 @@ def req_hoy_to_df(codigo):
     print("OK")
     
     return df_aemet.select('idema','fint','prec','pres','tamax','tamin','dv','vv')
-    #return df_aemet.select('idema','prec','pres','tamax','tamin','dv','vv')
 
 
-# In[82]:
+# In[ ]:
 
 
 def datos_aemet_hoy(codigos_estaciones):
@@ -544,9 +544,10 @@ def datos_aemet_hoy(codigos_estaciones):
 
 # ### [2.1.2] -QUÉ ESTACIONES MIDEN DATOS ACTUALES
 
-# In[83]:
+# In[ ]:
 
 
+print("[INFO] - Obtenemos la lista de estaciones AEMET que miden datos HOY")
 #Todos los datos actuales de todas las estaciones de la aemet
 api_response = api_observacion.datos_de_observacin__tiempo_actual_()
 pprint(api_response)
@@ -562,27 +563,27 @@ cod_estaciones_aemet_hoy = set(list([elem if elem in cod_estaciones_aemet_madrid
                                  for elem in cod_todas_estaciones_aemet_hoy]))
 cod_estaciones_aemet_hoy.remove("-1")
 
-cod_estaciones_aemet_hoy
+print("[INFO] - Códigos estaciones AEMET hoy - " + str(cod_estaciones_aemet_hoy))
 
 
 # ###  [2.1.3] -  DATOS
 
-# In[84]:
+# In[ ]:
 
 
+print("[INFO] - Obtenemos datos de clima de HOY para dichas estaciones")
 df_aemet_hoy = datos_aemet_hoy(cod_estaciones_aemet_hoy)
 
 
 # ### [2.1.4] - Tipos
 
-# In[85]:
+# In[ ]:
 
 
 magnitudes_aemet = df_aemet_hoy.columns[2:]
-#magnitudes_aemet
 
 
-# In[86]:
+# In[ ]:
 
 
 for columna in magnitudes_aemet:
@@ -591,7 +592,7 @@ for columna in magnitudes_aemet:
 
 # # [3] - Merge AYUNT + AEMET
 
-# In[87]:
+# In[ ]:
 
 
 pd_estaciones = pd_estaciones_ayunt.merge(pd_estaciones_aemet,how='outer')
@@ -601,7 +602,7 @@ pd_estaciones = pd_estaciones.fillna(0)
 # # [4] - Columna MIDE_CLIMA_FINAL = 
 # ### MIDE_CLIMA (AYUNT) + MIDE_CLIMA_AEMET
 
-# In[88]:
+# In[ ]:
 
 
 pd_estaciones["MIDE_CLIMA_FINAL"] = pd_estaciones["MIDE_CLIMA"] + pd_estaciones["MIDE_CLIMA_AEMET"]
@@ -611,7 +612,7 @@ pd_estaciones["MIDE_CLIMA_FINAL"] = pd_estaciones["MIDE_CLIMA"] + pd_estaciones[
 
 # ## [FUNCIONES] - CLUSTERING
 
-# In[89]:
+# In[ ]:
 
 
 def lista_diccionarios_estaciones(pd):
@@ -620,7 +621,7 @@ def lista_diccionarios_estaciones(pd):
                         in zip(pd["CODIGO_CORTO"].values,pd["LATITUD"].values,pd["LONGITUD"].values)] 
 
 
-# In[90]:
+# In[ ]:
 
 
 """
@@ -648,7 +649,7 @@ def objetivo_mas_cercano(objetivos,punto):
     return objetivo_mas_cercano
 
 
-# In[91]:
+# In[ ]:
 
 
 def agrupamiento_AEMET(pd):
@@ -664,7 +665,7 @@ def agrupamiento_AEMET(pd):
     return pd
 
 
-# In[92]:
+# In[ ]:
 
 
 """
@@ -689,7 +690,7 @@ def clima_mas_cercana(estaciones_magnitud,estaciones_aire,estacion):
         return None;
 
 
-# In[93]:
+# In[ ]:
 
 
 def agrupamiento_xmagnitud(pd,aemet= None,ayunt = None):
@@ -700,7 +701,7 @@ def agrupamiento_xmagnitud(pd,aemet= None,ayunt = None):
     elif(ayunt is not None):
         magnitudes = ayunt.columns[1:]
     else: 
-        raise Exception("[FUNC] agrupamiento_xmagnitud: Ambos datasets no pueden ser nulos")
+        raise Exception("[ERROR] - agrupamiento_xmagnitud(): Ambos datasets no pueden ser nulos")
     
     #Diccionario: Magnitud:[Lista de estaciones que la leen]
     estacionesxmagnitud = {}
@@ -729,29 +730,21 @@ def agrupamiento_xmagnitud(pd,aemet= None,ayunt = None):
           
         pd['E_%s' % magnitud] = [clima_mas_cercana(estaciones_magnitud,l_estaciones_aire,estacion) 
                         for estacion in estaciones]
-        
-        """
-        estaciones_clima_utilizadas = set(pd['E_%s' % magnitud].values)
-        pd['M_%s' % magnitud] = ["X" if estacion["CODIGO"] in estaciones_clima_utilizadas 
-                                     else "-"
-                                 for estacion in estaciones]
-        """
     return pd
 
 
 # ## [5 -- 1] - ESTACION AEMET + CERCANA
 
-# In[94]:
+# In[ ]:
 
 
 pd_estaciones = agrupamiento_AEMET(pd_estaciones)
 
 
-# In[95]:
+# In[ ]:
 
 
 pd_estaciones = pd_estaciones[["CODIGO_CORTO","ESTACION","LATITUD", "LONGITUD","E_AEMET","MIDE_AIRE","MIDE_CLIMA","MIDE_CLIMA_AEMET","MIDE_CLIMA_FINAL"]]
-#pd_estaciones.head(50)
 
 
 # ## [5 --2] - X MAGNITUD -> ESTACIÓN CLIMA + CERCANA
@@ -785,7 +778,7 @@ pd_estaciones = pd_estaciones[["CODIGO_CORTO","ESTACION","LATITUD", "LONGITUD","
 #         89 - PRECIPITACIÓN
 # 
 
-# In[96]:
+# In[ ]:
 
 
 #DF ESTACIONES AYUNTAMIENTO + MAGNITUDES LEIDAS
@@ -800,7 +793,7 @@ magnitudes_estaciones_ayunt = magnitudes_estaciones_ayunt.rename(columns={'CÓDI
 ayunt = magnitudes_estaciones_ayunt.fillna("0")
 
 
-# In[97]:
+# In[ ]:
 
 
 #DF ESTACIONES AEMET + MAGNITUDES LEIDAS
@@ -815,7 +808,7 @@ magnitudes_estaciones_aemet["89"] = "X"
 aemet = magnitudes_estaciones_aemet
 
 
-# In[98]:
+# In[ ]:
 
 
 pd_estaciones = agrupamiento_xmagnitud(pd_estaciones,aemet,ayunt)
@@ -823,7 +816,7 @@ pd_estaciones = agrupamiento_xmagnitud(pd_estaciones,aemet,ayunt)
 
 # ### [5 --2.1] - DIA ACTUAL (AEMET)
 
-# In[113]:
+# In[ ]:
 
 
 #magnitudes_estaciones_aemet_hoy
@@ -846,12 +839,12 @@ aux["AEMET_HOY_83"] =["X" if (tmax == "X") & (tmin == "X") else "-"
 aux = aux.drop(columns= ["AEMET_HOY_83_MIN","AEMET_HOY_83_MAX"])
 
 aemet_hoy = aux
-#aemet_hoy
 
 
-# In[114]:
+# In[ ]:
 
 
+print("[INFO] - Magnitudes leidas por estaciones Aemet HOY") 
 aemet_hoy
 
 
@@ -861,19 +854,12 @@ aemet_hoy
 pd_estaciones = agrupamiento_xmagnitud(pd_estaciones,aemet_hoy)
 
 
-# In[ ]:
-
-
-#pd_estaciones[pd_estaciones["MIDE_AIRE"]>0][["CODIGO_CORTO","ESTACION","LATITUD", "LONGITUD","MIDE_AIRE","MIDE_CLIMA_FINAL",'E_AEMET_HOY_81', 'E_AEMET_HOY_82', 'E_AEMET_HOY_83', 'E_AEMET_HOY_87', 'E_AEMET_HOY_89']]
-
-
 # # [6] - Nulos -> "-1"
 
 # In[ ]:
 
 
 pd_estaciones = pd_estaciones.fillna("-1")
-#pd_estaciones = pd_estaciones.replace(("None",None),np.nan)
 
 
 # In[ ]:
@@ -931,12 +917,6 @@ u_aemet_hoy = set([estacion for sublist in l_u_hoy for estacion in sublist])
 pd_estaciones["U_AEMET_HOY"] = [elem in u_aemet_hoy for elem in pd_estaciones["CODIGO_CORTO"]]
 
 
-# In[ ]:
-
-
-#u_aemet_hoy
-
-
 # ## [7.2] - U_TODAS
 
 # In[ ]:
@@ -956,12 +936,6 @@ u_todas = set([estacion for sublist in l_u_todas for estacion in sublist])
 
 
 pd_estaciones["U_TODAS"] = [elem in u_todas for elem in pd_estaciones["CODIGO_CORTO"]]
-
-
-# In[ ]:
-
-
-#pd_estaciones[['CODIGO_CORTO',"ESTACION",'E_AEMET','UTILIZADA_19','MIDE_AIRE','MIDE_CLIMA','MIDE_CLIMA_AEMET']]
 
 
 # # [8] - Exportamos
@@ -986,14 +960,23 @@ pd_estaciones.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones
 
 
 pd_estaciones.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + hoy +".csv")
+print("[INFO] - Estaciones-", hoy ,".csv --- Created successfully")
+
+
+# In[ ]:
+
 
 #Borrar la de ayer
 try:
     os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + ayer + ".csv")
-     print("[INFO] - Estaciones-", ayer,".csv --- Removed successfully")
+    print("[INFO] - Estaciones-", ayer,".csv --- Removed successfully")
 except:
     print("[ERROR] - Estaciones-", ayer,".csv --- Could not been removed")
 
+
+# ## [8.1] - Mensual
+
+# In[ ]:
 
 
 # Estaciones mes cerrado
@@ -1002,6 +985,7 @@ if(datetime.date.today().day == 1):
     ult_dia_mes_cerrado = datetime.date.today()- datetime.timedelta(days=1)
     mes_cerrado = str(ult_dia_mes_cerrado.year*100 + ult_dia_mes_cerrado.month)
     pd_estaciones.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + mes_cerrado +".csv")
+    print("[INFO] - Estaciones-", mes_cerrado ,".csv --- Created successfully")
     #BackUp de este mes
     pd_estaciones.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/BackUp/Estaciones-" + mes_cerrado +".csv")
 
@@ -1019,7 +1003,7 @@ if(datetime.date.today().day == 1):
 # ## [8.2] - Total
 
 #      Solo ejecutar si se quiere recalcular datos de 2014 - NOW mes cerrado
-#      !!! CUIDADO PUEDE HABER NUEVAS ESTACIONES Y JODERLO TODO
+#      !!! CUIDADO PUEDE HABER NUEVAS ESTACIONES
 
 # In[ ]:
 
