@@ -78,6 +78,11 @@ class Predictor():
         df_estaciones_aire = self.df_datos.filter(self.df_datos["FECHA"]== ayer).select("CODIGO_CORTO")
         cod_estaciones_aire = [elem[0] for elem in df_estaciones_aire.collect()]
         cod_estaciones_aire.sort()
+        if(not cod_estaciones_aire):
+            print("[ERROR] - No existen datos climaticos de ayer - Necesarios para la prediccion")
+            print("[ERROR] - Abortando mortor predictivo....")
+            sys.exit()
+            
         self.cod_estaciones_aire = cod_estaciones_aire
         
         df_hoy = self.df_calendario.filter(self.df_calendario["FECHA"]== hoy)

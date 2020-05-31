@@ -106,6 +106,9 @@ class contaminacion_dia():
         self.pd_media_dia = pd_media_dia[cols]
         
     def carga(self):
+	pd_diaxhoras = self.pd_diaxhoras
+        pd_media_dia = self.pd_media_dia
+
         hoy = datetime.date.today().strftime("%Y-%m-%d")
         ayer = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         

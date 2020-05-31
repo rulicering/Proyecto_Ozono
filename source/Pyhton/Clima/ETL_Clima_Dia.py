@@ -168,7 +168,7 @@ class ClimaDia():
         
     def carga_estaciones(self):
         ayer = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        df_estaciones = spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + ayer +".csv",inferSchema= True, header= True)
+        df_estaciones = self.spark.read.csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + ayer +".csv",inferSchema= True, header= True)
         self.df_estaciones = df_estaciones.cache()
         
         #Lista de magnitudes
