@@ -575,7 +575,7 @@ class Estaciones():
 
             #Borrar la del mes anterior
             dia_mes_cerrado_anterior = datetime.date.today() - datetime.timedelta(days=32)
-            mes_cerrado_anterior = dia_mes_cerrado_anterior.year*100+ dia_mes_cerrado_anterior.month
+            mes_cerrado_anterior = str(dia_mes_cerrado_anterior.year*100+ dia_mes_cerrado_anterior.month)
             try:
                 os.remove("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Estaciones/Estaciones-" + mes_cerrado_anterior + ".csv")
             except:

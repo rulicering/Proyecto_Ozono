@@ -141,8 +141,8 @@ class JoinDia():
         anterior = (datetime.date.today() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
         
         #BackUp
-        pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-Dia-" + nuevo + ".csv")
-        pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-Dia-" + nuevo + ".csv")
+        pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Datos-Dia-" + nuevo + ".csv",float_format = '%.8f')
+        pd_datos_hoy.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos-Dia-" + nuevo + ".csv",float_format = '%.8f')
         print("[INFO] - Datos-Dia-"+ nuevo+".csv --- Created successfully")
         #Borrar la de ayer
         try:
@@ -153,13 +153,13 @@ class JoinDia():
             
         #Inlcuir datos hoy en el conjunto total de datos (Dato Final)
         pd_datos = pandas.read_csv('/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv')
-        pd_datos = pandas_datos.drop(columns = ["Unnamed: 0"])
+        pd_datos = pd_datos.drop(columns = ["Unnamed: 0"])
         pd_datos_final = pandas.concat([pd_datos,pd_datos_hoy])
         
         #BackUp
-        pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Join_diario/Datos-" + nuevo + ".csv")
+        pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/BackUp/Join_diario/Datos-" + nuevo + ".csv",float_format = '%.8f')
         
-        pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv")
+        pd_datos_final.to_csv("/home/rulicering/Datos_Proyecto_Ozono/Procesado/Dato_Final/Datos.csv",float_format = '%.8f')
         print("[INFO] - JOIN DATOS HOY + TOTAL - Successfully")
 
 

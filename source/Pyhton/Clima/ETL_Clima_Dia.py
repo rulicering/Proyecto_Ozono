@@ -209,7 +209,7 @@ class ClimaDia():
         
         # Colocar columnas
         columnas = ["CODIGO_CORTO","ANO","MES","DIA","HORA","FECHA"]
-        for elem in c_magnitudes_aemet_hoy:
+        for elem in self.c_magnitudes_aemet_hoy:
             columnas.append(elem)
         pd_aemet = pd_aemet[columnas]   
             
@@ -228,6 +228,7 @@ class ClimaDia():
         self.pd_final =pd_aemet_media
         
     def carga(self):
+        pd_final = self.pd_final
         #Los datos de ayer se cargan a las 3 am de hoy. 1 dia de diferencia
         nuevo = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         anterior = (datetime.date.today() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")

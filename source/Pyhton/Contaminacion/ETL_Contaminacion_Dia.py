@@ -93,7 +93,7 @@ class contaminacion_dia():
         cols = pd_diaxhoras.columns.tolist()[0:6] + cols_magnitudes
         pd_diaxhoras = pd_diaxhoras[cols]
         pd_diaxhoras = pd_diaxhoras.sort_values(by=["ANO","MES","DIA","FECHA","HORA","CODIGO_CORTO"])
-        
+
         self.pd_diaxhoras = pd_diaxhoras
         self.media_diaria()
         
@@ -106,7 +106,7 @@ class contaminacion_dia():
         self.pd_media_dia = pd_media_dia[cols]
         
     def carga(self):
-	pd_diaxhoras = self.pd_diaxhoras
+        pd_diaxhoras = self.pd_diaxhoras
         pd_media_dia = self.pd_media_dia
 
         hoy = datetime.date.today().strftime("%Y-%m-%d")
